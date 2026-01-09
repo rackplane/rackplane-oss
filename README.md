@@ -24,7 +24,7 @@ RackPlane is a comprehensive, real-time management platform for all physical ass
 
 
 
-### 3. Real-Time Inventory Tracking
+### 1. Real-Time Inventory Tracking
 
 **Asset Management:**
 - Centralized database for servers, switches, storage, cables, PDUs, etc.
@@ -33,7 +33,7 @@ RackPlane is a comprehensive, real-time management platform for all physical ass
 - Warranty expiration tracking
 - Serial number management
 
-### 4. Stock Management & Storage
+### 2. Stock Management & Storage
 
 **Automatic Storage Assignment:**
 - Items automatically assigned to storage boxes on creation
@@ -43,7 +43,7 @@ RackPlane is a comprehensive, real-time management platform for all physical ass
 - Lifecycle management - automatic status changes on deployment
 - Stock summaries by type, location, and container
 
-### 5. Port-to-Port Cable Connections
+### 3. Port-to-Port Cable Connections
 
 **Network Port Management:**
 - Track network ports on switches, routers, and servers
@@ -58,7 +58,7 @@ RackPlane is a comprehensive, real-time management platform for all physical ass
 - Cable type support: DAC, fiber, ethernet, power
 - Connection history and audit trail
 
-### 6. API Access & Authentication
+### 4. API Access & Authentication
 
 **RESTful API:**
 - Full CRUD operations on all resources
@@ -71,7 +71,7 @@ RackPlane is a comprehensive, real-time management platform for all physical ass
 - Scope-based permissions
 - API key generation per tenant
 
-### 7. Location Management
+### 5. Location Management
 
 **Hierarchical Location Tracking:**
 - Datacenter → Room → Rack → U-position
@@ -111,6 +111,7 @@ nano .env
 - `DATABASE_URL` - PostgreSQL connection (default: `postgresql://rackplane:rackplane@db:5432/rackplane`)
 - `SERVICES_DATABASE_URL` - Central services DB (optional, defaults to DATABASE_URL)
 - `CORS_ORIGINS` - Configure for reverse proxy or IP access
+- `ALLOWED_HOSTS` - Add your public IP or DNS that you will access the app through
 
 **Default settings work for local development:**
 - Database: PostgreSQL on port 5432
