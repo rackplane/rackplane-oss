@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Cache Busting: Managed by build system (CRA/Vite) */
+
+@layer components {
+  .card {
+    @apply bg-card text-card-foreground p-6 rounded-lg shadow-sm border border-border transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-opacity-90 transition-all duration-200 shadow-sm focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-opacity-90 transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none bg-background text-foreground transition-all duration-200;
+  }
+
+  /* Status Badges */
+  .badge-success {
+    @apply px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-medium;
+  }
+
+  .badge-warning {
+    @apply px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded-full text-xs font-medium;
+  }
+
+  .badge-danger {
+    @apply px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 rounded-full text-xs font-medium;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply flex items-center px-4 py-3 text-gray-500 dark:text-gray-400 hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors duration-200;
+  }
+
+  /* Legacy Compatibility */
+  .text-secondary {
+    @apply text-muted-foreground;
+  }
+}
+
+@layer base {
+  :root {
+    /* Shadcn/UI - Light Mode (Electric Blueprint Adapted) */
+    --background: 210 40% 98%;
+    /* #f8fafc */
+    --foreground: 222 47% 11%;
+    /* #0f172a */
+
+    --card: 0 0% 100%;
+    /* #ffffff */
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 211 100% 50%;
+    /* #007BFF (Electric Blue) */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 190 100% 50%;
+    /* #00D4FF (Cyan Data Stream) */
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 211 100% 50%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Shadcn/UI - Dark Mode (Electric Blueprint) */
+    --background: 222 47% 11%;
+    /* #0f172a */
+    --foreground: 210 40% 98%;
+    /* #f8fafc */
+
+    --card: 217 33% 17%;
+    /* #1e293b (Slate 800) */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 211 100% 50%;
+    /* #007BFF */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 190 100% 50%;
+    /* #00D4FF */
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 190 100% 50%;
+    /* Cyan Ring in Dark Mode */
+  }
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

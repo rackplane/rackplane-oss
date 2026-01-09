@@ -1,0 +1,192 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+*.log
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.cursorrules
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+frontend/coverage/
+frontend/build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.gz
+*.tsv
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# Test backups (keep scripts, ignore backup files)
+test_backups/*.tar.gz
+test_backups/*.json
+test_backups/*.gz
+
+# Backup files (database backups, restore files)
+backend/*.tar.gz
+backend/backups/
+backend/database_*.json
+backend/datacenter-backup-*.json
+backend/dcms_backup_*.tar.gz
+backend/dcms_backup_*.json
+backend/tenant_*.json
+backend/backup.tar.gz
+*.tar.gz
+!package.json
+!package-lock.json
+!tsconfig.json
+!tailwind.config.js
+
+# Coverage reports
+backend/coverage.xml
+backend/htmlcov/
+
+# Google Cloud credentials (never commit these!)
+google-vision-key.json
+*-vision-key.json
+*-service-account*.json
+
+# Proposals and planning documents (internal use only)
+*_PROPOSAL.md
+*_PROPOSAL.txt
+*PROPOSAL*.md
+*PROPOSAL*.txt
+PROPOSAL*.md
+PROPOSAL*.txt
+
+# Internal documentation directory (proprietary/verification docs)
+internal-docs/
+*internal-docs*
+
+# Marketing site (moved outside repository)
+marketing-site/
+
+# Proprietary/internal documentation (legacy patterns - files moved to internal-docs/)
+backend/tests/PRODUCTION_TENANTS.md
+*PRODUCTION*.md
+*PRODUCTION*.txt
+*VERIFICATION*.md
+*VERIFICATION*.txt
+*_VERIFICATION.md
+*_VERIFICATION.txt
+docs/*VERIFICATION*.md
+docs/TEST_COVERAGE*.md
+docs/PREVENTING*.md
+docs/DEVELOPMENT_CHECKLIST.md
+*PROPOSAL*.md
+*PROPOSAL*.txt
+
+# docs site
+docs-site
+docs_site/
+
+# Temporary / Debug files
+*.old
+*.diff
+*.patch
+debug_output.txt
+.fly-backup-info.txt
+
+
+# Local Data (Do not commit)
+cables.csv
+
+# Kubernetes
+k8s/backup-secrets*.yaml
+k8s/secrets*.yaml
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Local Data (orders, uploads, etc - DO NOT COMMIT)
+data/
+data/orders/
+# Exception: Allow test data fixtures
+!backend/tests/data/
+
+# Fly.io deployment artifacts (created during fly deploy due to file copy workaround)
+/app/
+/alembic/
+/services/
+/alembic.ini
+/requirements.txt
+/backup_cli.py
+/restore_cli.py
+/start.sh
+/wait_for_db.py
+
+
+
+# Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
+
+# Codacy local config
+.codacy/
+
+# codespaces
+
+rackplane.code-workspace

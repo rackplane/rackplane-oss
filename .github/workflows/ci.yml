@@ -1,0 +1,237 @@
+name: CI
+
+# Trigger on pushes and PRs to main/develop branches
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DEBUG: "true"
+  BUILD_MODE: "oss"
+
+jobs:
+  # ============================================
+  # Backend Tests - Run pytest with PostgreSQL
+  # ============================================
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: dcms
+          POSTGRES_PASSWORD: dcms_password
+          POSTGRES_DB: datacenter_inventory
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr libpq-dev
+
+      - name: Install Python dependencies
+        working-directory: backend
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dcms:dcms_password@localhost:5432/datacenter_inventory
+          SECRET_KEY: test-secret-key-for-ci
+          REDIS_URL: redis://localhost:6379/0
+          DEBUG: "true"
+          BUILD_MODE: oss
+        run: |
+          python bootstrap.py
+          alembic upgrade head
+
+      - name: Run tests with coverage
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dcms:dcms_password@localhost:5432/datacenter_inventory
+          SECRET_KEY: test-secret-key-for-ci
+          REDIS_URL: redis://localhost:6379/0
+          PASSLIB_BCRYPT_STRICT: "0"
+          BUILD_MODE: oss
+        run: |
+          python -m pytest tests/ \
+            -m "not premium" \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --junitxml=test-results.xml \
+            -v
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: backend/test-results.xml
+
+  # ============================================
+  # Frontend Build - TypeScript and build check
+  # ============================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          CI: false  # Don't treat warnings as errors
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/build
+          retention-days: 7
+
+  # ============================================
+  # Docker Build - Verify images build correctly
+  # ============================================
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate docker-compose
+        run: docker compose config --quiet
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: rackplane-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: rackplane-frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================
+  # Code Quality - Linting and security checks
+  # ============================================
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linters
+        run: pip install ruff safety
+
+      - name: Run Ruff (Python linter)
+        working-directory: backend
+        run: ruff check app/ --output-format=github || true
+
+      - name: Check for vulnerable dependencies
+        working-directory: backend
+        run: safety check -r requirements.txt --output text || true
+
+  # ============================================
+  # Migration Safety Check
+  # ============================================
+  migration-check:
+    name: Migration Safety
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install alembic
+        run: |
+          pip install alembic sqlalchemy
+
+      - name: Check for single migration head
+        working-directory: backend
+        run: |
+          python scripts/check_single_head.py || echo "Migration head check - review if multiple heads detected"

@@ -1,0 +1,216 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:17-alpine
+    container_name: rackplane_postgres
+    environment:
+      POSTGRES_USER: dcms
+      POSTGRES_PASSWORD: dcms_password
+      POSTGRES_DB: datacenter_inventory
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U dcms -d datacenter_inventory" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: rackplane_redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    image: rackplane-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        BUILD_MODE: ${BUILD_MODE:-premium}
+      cache_from:
+        - ghcr.io/${IMAGE_NAME:-rackplane}/backend:cache
+    container_name: rackplane_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    # Expose port for local development/testing
+    ports:
+      - "127.0.0.1:8000:8000"
+    expose:
+      - "8000"
+    environment:
+      - BUILD_MODE=${BUILD_MODE:-premium}
+      - DATABASE_URL=postgresql://dcms:dcms_password@db:5432/datacenter_inventory
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=dcms
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-dcms_password}
+      - POSTGRES_DB=datacenter_inventory
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production-to-a-secure-random-key}
+      - PASSLIB_BCRYPT_STRICT=0
+      - DEBUG=true
+      - DEMO_MODE=${DEMO_MODE:-false}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-["localhost", "127.0.0.1", "backend"]}
+      - DEMO_LOGIN_ENABLED=${DEMO_LOGIN_ENABLED:-false}
+      - DEMO_LOGIN_KEY=${DEMO_LOGIN_KEY:-}
+      # Host IP for ALLOWED_HOSTS auto-detection (optional)
+      # Set HOST_IP in your environment or .env to allow access from the host machine's IP
+      - HOST_IP=${HOST_IP:-}
+      # Email Configuration
+      - ENABLE_EMAIL_ALERTS=${ENABLE_EMAIL_ALERTS:-true}
+      - LOW_STOCK_ALERT_ENABLED=${LOW_STOCK_ALERT_ENABLED:-true}
+      - MAINTENANCE_ALERT_ENABLED=${MAINTENANCE_ALERT_ENABLED:-true}
+      - WARRANTY_ALERT_ENABLED=${WARRANTY_ALERT_ENABLED:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # React Frontend
+  frontend:
+    image: rackplane-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_IS_DEMO: ${REACT_APP_IS_DEMO:-false}
+      cache_from:
+        - ghcr.io/${IMAGE_NAME:-rackplane}/frontend:cache
+    container_name: rackplane_frontend
+    # NOTE: No volume mounts - use the built image's /app/build folder
+    # For development, add: volumes: ["./frontend:/app", "/app/node_modules"]
+    # Don't expose port directly - access through nginx
+    expose:
+      - "3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: rackplane_nginx
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s # Wait for backend to be fully ready before failing
+
+  # Celery Worker (for background tasks)
+  celery_worker:
+    image: rackplane-backend:latest
+    container_name: rackplane_celery
+    command: celery -A app.celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - BUILD_MODE=${BUILD_MODE:-premium}
+      - DATABASE_URL=postgresql://dcms:dcms_password@db:5432/datacenter_inventory
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=dcms
+      - POSTGRES_PASSWORD=dcms_password
+      - POSTGRES_DB=datacenter_inventory
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=change-this-in-production-to-a-secure-random-key
+      - PASSLIB_BCRYPT_STRICT=0
+      - DEBUG=true
+    depends_on:
+      - db
+      - redis
+
+  # MinIO Object Storage (for photos/documents)
+  minio:
+    image: minio/minio:latest
+    container_name: rackplane_minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Prometheus (Metrics)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rackplane_prometheus
+    volumes:
+      - ./backend/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9091:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+
+  # Grafana (Dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rackplane_grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  uploads:
+  prometheus_data:
+  grafana_data:
+
+
+networks:
+  default:
+    name: rackplane_network

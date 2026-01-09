@@ -1,0 +1,25 @@
+# Docker Compose Override for Host Nginx Setup
+# 
+# Use this file if you have your own nginx running on the host.
+# 
+# USAGE:
+#   cp docker-compose.override.example.yml docker-compose.override.yml
+#   docker compose up -d
+#
+# Docker Compose automatically merges this with docker-compose.yml.
+# This file is gitignored and won't be overwritten on git pull.
+
+services:
+  # Disable the Docker nginx container (use host nginx instead)
+  nginx:
+    profiles: ["disabled"]
+  
+  # Expose backend to localhost only (for host nginx to proxy)
+  backend:
+    ports:
+      - "127.0.0.1:8000:8000"
+  
+  # Expose frontend to localhost only (for host nginx to proxy)
+  frontend:
+    ports:
+      - "127.0.0.1:3000:3000"

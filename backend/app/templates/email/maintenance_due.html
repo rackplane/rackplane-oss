@@ -1,0 +1,16 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<div class="info-box">
+    <strong>{{ asset_tag }}</strong> requires <strong>{{ maintenance_type }}</strong> maintenance.
+</div>
+
+<p><strong>Scheduled Date:</strong> {{ scheduled_date }}</p>
+
+{% if description %}
+<div style="margin-top: 16px; color: #475569;">
+    <strong>Notes:</strong><br>
+    {{ description }}
+</div>
+{% endif %}
+{% endblock %}

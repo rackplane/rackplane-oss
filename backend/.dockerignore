@@ -1,0 +1,16 @@
+# Backend Docker build ignore
+# Only exclude Python cache, not source files
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.coverage
+htmlcov/
+.env
+.env.local
+*.log
+logs/
+.git/
+.venv/
+venv/

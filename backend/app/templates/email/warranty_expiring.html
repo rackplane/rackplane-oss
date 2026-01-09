@@ -1,0 +1,11 @@
+{% extends "email/base.html" %}
+
+{% block content %}
+<div class="warning-box">
+    <strong>{{ asset_tag }}</strong> warranty expires in <strong>{{ days_remaining }} days</strong>.
+</div>
+
+<p><strong>Warranty Expiry Date:</strong> {{ warranty_expiry }}</p>
+
+<p>Please review the asset status and consider extending coverage or planning for replacement if necessary.</p>
+{% endblock %}
