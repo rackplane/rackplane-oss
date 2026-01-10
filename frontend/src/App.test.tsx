@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 import App from './App';
 
 // Mock all the contexts
-jest.mock('./contexts/AuthContext', () => ({
+vi.mock('./contexts/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   useAuth: () => ({
     user: { id: 1, username: 'testuser', role: 'admin', tenant_id: 1 },
@@ -12,11 +12,11 @@ jest.mock('./contexts/AuthContext', () => ({
     isSuperAdmin: false,
     isTenantAdmin: true,
     isLoading: false,
-    logout: jest.fn(),
+    logout: vi.fn(),
   }),
 }));
 
-jest.mock('./contexts/WhiteLabelContext', () => ({
+vi.mock('./contexts/WhiteLabelContext', () => ({
   WhiteLabelProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   useWhiteLabel: () => ({
     displayName: 'RackPlane',
@@ -24,19 +24,19 @@ jest.mock('./contexts/WhiteLabelContext', () => ({
   }),
 }));
 
-jest.mock('./contexts/CartContext', () => ({
+vi.mock('./contexts/CartContext', () => ({
   CartProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   useCart: () => ({
     cart: [],
-    toggleCart: jest.fn(),
+    toggleCart: vi.fn(),
   }),
 }));
 
 // Mock axios
-jest.mock('axios', () => ({
+vi.mock('axios', () => ({
   __esModule: true,
   default: {
-    get: jest.fn((url: string) => {
+    get: vi.fn((url: string) => {
       if (url.includes('/demo-info')) {
         return Promise.resolve({ data: { demo_login_enabled: false } });
       }
@@ -45,7 +45,7 @@ jest.mock('axios', () => ({
       }
       return Promise.resolve({ data: {} });
     }),
-    post: jest.fn(),
+    post: vi.fn(),
     defaults: {
       headers: {
         common: {},
@@ -55,43 +55,43 @@ jest.mock('axios', () => ({
 }));
 
 // Mock the API_URL
-jest.mock('./config/api', () => ({
+vi.mock('./config/api', () => ({
   API_URL: 'http://localhost:8000',
 }));
 
 // Mock environment util
-jest.mock('./utils/environment', () => ({
+vi.mock('./utils/environment', () => ({
   isDemoEnvironment: () => false,
 }));
 
 // Mock all lazy-loaded components
-jest.mock('./pages/Dashboard', () => ({
+vi.mock('./pages/Dashboard', () => ({
   __esModule: true,
   default: () => <div>Dashboard</div>,
 }));
 
-jest.mock('./pages/Assets', () => ({
+vi.mock('./pages/Assets', () => ({
   __esModule: true,
   default: () => <div>Assets</div>,
 }));
 
 // Mock other components
-jest.mock('./components/GlobalSearch', () => ({
+vi.mock('./components/GlobalSearch', () => ({
   __esModule: true,
   default: () => <div>GlobalSearch</div>,
 }));
 
-jest.mock('./components/ThemeToggle', () => ({
+vi.mock('./components/ThemeToggle', () => ({
   __esModule: true,
   default: () => <div>ThemeToggle</div>,
 }));
 
-jest.mock('./components/SubscriptionBadge', () => ({
+vi.mock('./components/SubscriptionBadge', () => ({
   __esModule: true,
   default: () => <div>SubscriptionBadge</div>,
 }));
 
-jest.mock('./components/ShoppingCartDrawer', () => ({
+vi.mock('./components/ShoppingCartDrawer', () => ({
   __esModule: true,
   default: () => <div>ShoppingCartDrawer</div>,
 }));
@@ -99,20 +99,20 @@ jest.mock('./components/ShoppingCartDrawer', () => ({
 // Helper to advance timers and flush promises
 const advanceTimersAndFlush = async (ms: number) => {
   await act(async () => {
-    jest.advanceTimersByTime(ms);
+    vi.advanceTimersByTime(ms);
     await Promise.resolve();
   });
 };
 
 describe('Dropdown Close Delay', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.clearAllMocks();
+    vi.useFakeTimers();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 
   it('should delay close by 200ms on mouse leave', async () => {

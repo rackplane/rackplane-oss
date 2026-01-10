@@ -1,15 +1,16 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import LoginModal from './LoginModal';
 import { AuthProvider } from '../contexts/AuthContext';
 
 // Mock axios before importing anything that uses it
-jest.mock('axios', () => ({
+vi.mock('axios', () => ({
   __esModule: true,
   default: {
-    post: jest.fn(),
-    get: jest.fn(),
+    post: vi.fn(),
+    get: vi.fn(),
     defaults: {
       headers: {
         common: {}
@@ -19,21 +20,25 @@ jest.mock('axios', () => ({
 }));
 
 // Mock the API_URL
-jest.mock('../config/api', () => ({
+vi.mock('../config/api', () => ({
   API_URL: 'http://localhost:8000'
 }));
 
-// Helper to render with AuthProvider
+// Helper to render with AuthProvider and Router
 const renderWithAuth = (component: React.ReactElement) => {
-  return render(<AuthProvider>{component}</AuthProvider>);
+  return render(
+    <BrowserRouter>
+      <AuthProvider>{component}</AuthProvider>
+    </BrowserRouter>
+  );
 };
 
 describe('LoginModal', () => {
-  const mockOnClose = jest.fn();
-  const mockLogin = jest.fn();
+  const mockOnClose = vi.fn();
+  const mockLogin = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset environment variables
     delete process.env.REACT_APP_DEMO_MODE;
     delete process.env.REACT_APP_DEMO_USERNAME;
