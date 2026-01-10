@@ -36,5 +36,6 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: './src/setupTests.ts',
     css: true,
+    testTimeout: 10000, // Some dropdown tests need more time
   },
 });

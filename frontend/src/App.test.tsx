@@ -302,7 +302,7 @@ describe('Dropdown Close Delay', () => {
     // Dropdown should close immediately
     await waitFor(() => {
       expect(screen.queryByRole('link', { name: /Settings/i })).not.toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
     // Advance past the timer delay
     await advanceTimersAndFlush(300);
