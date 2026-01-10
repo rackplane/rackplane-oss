@@ -2,18 +2,17 @@
 set -e
 
 # Install dependencies if node_modules is missing or incomplete
-# Check for both tailwind-merge and react-scripts to ensure all deps are present
-if [ ! -d "node_modules" ] || [ ! -d "node_modules/tailwind-merge" ] || [ ! -d "node_modules/react-scripts" ]; then
+# Check for vite to ensure all deps are present
+if [ ! -d "node_modules" ] || [ ! -d "node_modules/vite" ]; then
   echo "⚠️  Dependencies missing or incomplete, installing..."
-  npm install
+  # Note: --legacy-peer-deps is used to handle peer dependency conflicts
+  # between React 18 and some older packages. This is a temporary workaround.
+  # See PEER_DEPENDENCY_CONFLICTS.md for details.
+  # TODO: Resolve peer dependency conflicts properly by upgrading conflicting packages.
+  npm install --legacy-peer-deps
   echo "✅ Dependencies installed"
 fi
 
-
-
-
-
-# Serve the build folder on port 3000
+# Serve the dist folder on port 3000 (Vite output directory)
 echo "✅ Starting production server..."
-exec serve -s build -l 3000
-
+exec serve -s dist -l 3000
