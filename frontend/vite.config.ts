@@ -26,6 +26,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    // Explicitly set target for browser compatibility
+    // TypeScript's target is 'esnext' which doesn't downlevel code,
+    // so Vite needs to handle transpilation for older browsers
+    target: 'es2020', // Supports modern browsers (Chrome 80+, Firefox 75+, Safari 14+)
   },
   // Vitest configuration
   test: {

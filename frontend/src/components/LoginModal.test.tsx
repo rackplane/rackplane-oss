@@ -35,7 +35,6 @@ const renderWithAuth = (component: React.ReactElement) => {
 
 describe('LoginModal', () => {
   const mockOnClose = vi.fn();
-  const mockLogin = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
